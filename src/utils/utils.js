@@ -64,12 +64,15 @@ export const findContractNameByAddress = (address, chain) => {
 // The updated decoding function
 export const decodeTransactionData = (data, target, chainId) => {
   try {
-    const contractName = findContractNameByAddress(target, chainId);
+    let contractName = findContractNameByAddress(target, chainId);
     if (!contractName) {
       throw new Error(
         `Contract name for address ${target} not found on chain ${chainId}.`
       );
     }
+
+    // If cntract name includes _old, remove it (Sepolia has two sets of contracts)
+    contractName = contractName.replace('_old', '');
 
     // Assuming ABIs are stored in `abis` folder with names matching the contract names in the mapping
     const abi = require(`./../abis/${contractName}.json`);
