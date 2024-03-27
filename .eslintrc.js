@@ -30,5 +30,6 @@ module.exports = {
     'react/no-deprecated': 'off',
     'no-else-return': 'off',
     'prefer-template': 'off',
+    'no-unused-vars': 'off',
   },
 };

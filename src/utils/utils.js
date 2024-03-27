@@ -79,6 +79,7 @@ export const decodeTransactionData = (data, target, chainId) => {
     const abi = require(`./../abis/${contractName}.json`);
     const iface = new Interface(abi);
     const decoded = iface.parseTransaction({ data });
+    let decodedDescription = '';
 
     if (['revokeRole', 'grantRole', 'renounceRole'].includes(decoded.name)) {
       const roleHash = decoded.args[0];
@@ -87,13 +88,21 @@ export const decodeTransactionData = (data, target, chainId) => {
       const modifiedArgs = [readableRole, ...decoded.args.slice(1)];
 
       // Rebuild the human-readable transaction description
-      return `${decoded.name}(${modifiedArgs.join(', ')})`;
+      decodedDescription = `${decoded.name}(${modifiedArgs.join(', ')})`;
     } else {
-      return decoded.name + '(' + decoded.args.join(', ') + ')';
+      decodedDescription = decoded.name + '(' + decoded.args.join(', ') + ')';
     }
+    return {
+      decodedData: decodedDescription,
+      rawData: data,
+    };
   } catch (error) {
     console.error('Error decoding transaction data:', error);
-    return 'Could not decode';
+    const decodedDescription = 'Could not decode';
+    return {
+      decodedData: decodedDescription,
+      rawData: data,
+    };
   }
 };
 
