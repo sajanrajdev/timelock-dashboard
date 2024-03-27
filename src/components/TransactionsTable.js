@@ -11,6 +11,7 @@ import {
   Link,
   IconButton,
   Tooltip,
+  TablePagination,
 } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import {
@@ -24,6 +25,22 @@ import ProgressWithLabel from './ProgressWithLabel';
 import contractNames from '../utils/contracts';
 
 function TransactionsTable({ transactions, timelockIdKey, chain }) {
+  const [page, setPage] = React.useState(0);
+  const [rowsPerPage, setRowsPerPage] = React.useState(5);
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0); // Reset to the first page
+  };
+
+  const sortedTransactions = transactions
+    .slice()
+    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
   const renderTableTitle = (timelockName) => {
     const address = contractNames[chain][timelockName];
     const addressLink = getEtherscanAddressUrl(address, chain);
@@ -75,58 +92,75 @@ function TransactionsTable({ transactions, timelockIdKey, chain }) {
             </TableRow>
           </TableHead>
           <TableBody>
-            {transactions.map((tx) => (
-              <TableRow key={tx.id} hover>
-                <TableCell component="th" scope="row">
-                  <Tooltip title={tx[timelockIdKey]}>
-                    <span>
-                      {`${tx[timelockIdKey].substring(0, 6)}...${tx[timelockIdKey].substring(tx[timelockIdKey].length - 4)}`}
-                      <IconButton
-                        onClick={() => copyToClipboard(tx[timelockIdKey])}
-                        size="small"
-                        sx={{ ml: 1 }}
-                      >
-                        <ContentCopyIcon fontSize="inherit" />
-                      </IconButton>
-                    </span>
-                  </Tooltip>
-                </TableCell>
-                <TableCell align="right">
-                  <Link
-                    href={getEtherscanAddressUrl(tx.target, chain)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    color="inherit"
-                  >
-                    {findContractNameByAddress(tx.target, chain) ||
-                      'Unknown Contract'}
-                  </Link>
-                </TableCell>
-                <TableCell align="right">
-                  {decodeTransactionData(tx.data, tx.target, chain)}
-                </TableCell>
-                <TableCell align="right">{tx.salt}</TableCell>
-                <TableCell align="right">{tx.timestamp}</TableCell>
-                <TableCell align="right">
-                  {tx.eta}
-                  <ProgressWithLabel
-                    startDateString={tx.timestamp}
-                    endDateString={tx.eta}
-                    state={tx.state}
-                  />
-                </TableCell>
-                <TableCell align="right">
-                  <EtherscanLinkChip
-                    id={tx.id}
-                    label={tx.state}
-                    chain={chain}
-                  />
-                </TableCell>
-              </TableRow>
-            ))}
+            {sortedTransactions
+              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+              .map((tx) => (
+                <TableRow key={tx.id} hover>
+                  <TableCell component="th" scope="row">
+                    <Tooltip title={tx[timelockIdKey]}>
+                      <span>
+                        {`${tx[timelockIdKey].substring(0, 6)}...${tx[timelockIdKey].substring(tx[timelockIdKey].length - 4)}`}
+                        <IconButton
+                          onClick={() => copyToClipboard(tx[timelockIdKey])}
+                          size="small"
+                          sx={{ ml: 1 }}
+                        >
+                          <ContentCopyIcon fontSize="inherit" />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Link
+                      href={getEtherscanAddressUrl(tx.target, chain)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      color="inherit"
+                    >
+                      {findContractNameByAddress(tx.target, chain) ||
+                        'Unknown Contract'}
+                    </Link>
+                  </TableCell>
+                  <TableCell align="right">
+                    {decodeTransactionData(tx.data, tx.target, chain)}
+                  </TableCell>
+                  <TableCell align="right">{tx.salt}</TableCell>
+                  <TableCell align="right">{tx.timestamp}</TableCell>
+                  <TableCell align="right">
+                    {tx.eta}
+                    <ProgressWithLabel
+                      startDateString={tx.timestamp}
+                      endDateString={tx.eta}
+                      state={tx.state}
+                    />
+                  </TableCell>
+                  <TableCell align="right">
+                    <EtherscanLinkChip
+                      id={tx.id}
+                      label={tx.state}
+                      chain={chain}
+                    />
+                  </TableCell>
+                </TableRow>
+              ))}
           </TableBody>
         </Table>
       </TableContainer>
+      <TablePagination
+        component="div"
+        count={sortedTransactions.length}
+        rowsPerPage={rowsPerPage}
+        page={page}
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+        rowsPerPageOptions={[5, 10, 25, 50, 100]}
+        sx={{
+          paddingRight: 4,
+          marginTop: -4,
+          width: 'calc(100% - 32px)',
+          mx: 'auto',
+        }}
+      />
     </>
   );
 }
