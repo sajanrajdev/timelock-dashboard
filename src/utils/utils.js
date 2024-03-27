@@ -1,5 +1,6 @@
 import { Interface } from 'ethers';
 import contractNames from './contracts';
+import roleMapping from './timelockRoles';
 
 export const processTransactions = (
   scheduledTransactions,
@@ -79,7 +80,17 @@ export const decodeTransactionData = (data, target, chainId) => {
     const iface = new Interface(abi);
     const decoded = iface.parseTransaction({ data });
 
-    return `${decoded.name}(${decoded.args.join(', ')})`;
+    if (['revokeRole', 'grantRole', 'renounceRole'].includes(decoded.name)) {
+      const roleHash = decoded.args[0];
+      const readableRole =
+        roleMapping[roleHash.toLowerCase()] || 'UNKNOWN_ROLE';
+      const modifiedArgs = [readableRole, ...decoded.args.slice(1)];
+
+      // Rebuild the human-readable transaction description
+      return `${decoded.name}(${modifiedArgs.join(', ')})`;
+    } else {
+      return decoded.name + '(' + decoded.args.join(', ') + ')';
+    }
   } catch (error) {
     console.error('Error decoding transaction data:', error);
     return 'Could not decode';

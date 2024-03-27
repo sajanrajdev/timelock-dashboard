@@ -28,5 +28,7 @@ module.exports = {
     'no-restricted-syntax': 'off',
     'react/jsx-filename-extension': 'off',
     'react/no-deprecated': 'off',
+    'no-else-return': 'off',
+    'prefer-template': 'off',
   },
 };
