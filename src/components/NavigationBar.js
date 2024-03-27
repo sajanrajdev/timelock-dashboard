@@ -9,7 +9,6 @@ import {
   Switch,
   FormGroup,
   FormControlLabel,
-  InputLabel,
 } from '@mui/material';
 import logo from '../assets/ebtc-main-logo.webp';
 
@@ -30,13 +29,17 @@ function NavigationBar({ chainId, setChainId, mode, handleThemeChange }) {
           Timelock Transparency Dashboard
         </Typography>
         <FormControl sx={{ m: 1, minWidth: 120 }}>
-          <InputLabel id="chain-select-label">Chain</InputLabel>
           <Select
             labelId="chain-select-label"
             id="chain-select"
             value={chainId}
-            label="Chain"
             onChange={handleChainChange}
+            sx={{
+              '.MuiSelect-select': {
+                paddingTop: '6px', // Adjust top padding
+                paddingBottom: '6px', // Adjust bottom padding
+              },
+            }}
           >
             <MenuItem value="mainnet">Mainnet</MenuItem>
             <MenuItem value="sepolia">Sepolia</MenuItem>
