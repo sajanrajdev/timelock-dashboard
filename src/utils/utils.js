@@ -1,5 +1,6 @@
 import { Interface } from 'ethers';
 import contractNames from './contracts';
+import roleMapping from './timelockRoles';
 
 export const processTransactions = (
   scheduledTransactions,
@@ -64,22 +65,44 @@ export const findContractNameByAddress = (address, chain) => {
 // The updated decoding function
 export const decodeTransactionData = (data, target, chainId) => {
   try {
-    const contractName = findContractNameByAddress(target, chainId);
+    let contractName = findContractNameByAddress(target, chainId);
     if (!contractName) {
       throw new Error(
         `Contract name for address ${target} not found on chain ${chainId}.`
       );
     }
 
+    // If cntract name includes _old, remove it (Sepolia has two sets of contracts)
+    contractName = contractName.replace('_old', '');
+
     // Assuming ABIs are stored in `abis` folder with names matching the contract names in the mapping
     const abi = require(`./../abis/${contractName}.json`);
     const iface = new Interface(abi);
     const decoded = iface.parseTransaction({ data });
+    let decodedDescription = '';
 
-    return `${decoded.name}(${decoded.args.join(', ')})`;
+    if (['revokeRole', 'grantRole', 'renounceRole'].includes(decoded.name)) {
+      const roleHash = decoded.args[0];
+      const readableRole =
+        roleMapping[roleHash.toLowerCase()] || 'UNKNOWN_ROLE';
+      const modifiedArgs = [readableRole, ...decoded.args.slice(1)];
+
+      // Rebuild the human-readable transaction description
+      decodedDescription = `${decoded.name}(${modifiedArgs.join(', ')})`;
+    } else {
+      decodedDescription = decoded.name + '(' + decoded.args.join(', ') + ')';
+    }
+    return {
+      decodedData: decodedDescription,
+      rawData: data,
+    };
   } catch (error) {
     console.error('Error decoding transaction data:', error);
-    return 'Could not decode';
+    const decodedDescription = 'Could not decode';
+    return {
+      decodedData: decodedDescription,
+      rawData: data,
+    };
   }
 };
 
