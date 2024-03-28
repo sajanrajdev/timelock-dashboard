@@ -137,7 +137,7 @@ function TransactionsTable({ transactions, timelockIdKey, chain }) {
                       <div>
                         {decodedData}
                         <Tooltip
-                          title={`Click to copy raw data: ${rawData}`}
+                          title={`Raw data: ${rawData}`}
                           enterDelay={300}
                           leaveDelay={200}
                         >
